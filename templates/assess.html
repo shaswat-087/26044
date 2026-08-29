@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Register</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <header>
+    <h1> Academia-Industry Portal </h1>
+    <p class="ehc"> Register Portal For College Students </p>
+  </header>
+   
+  <input type="hidden" name="current_depth" value="{{ current_depth }}">
+<input type="hidden" name="subdomain_list" value="{{ subdomain_list }}">
+{% if assessment_question is defined %}
+<div class="question-container">
+    <div class="question-header">
+        <span class="question-number">Question {{ current_depth + 1 }}</span>
+        {% if assessment_question.difficulty %}
+        <span class="difficulty">{{ assessment_question.difficulty }}</span>
+        {% endif %}
+    </div>
+
+    <div class="question-box">
+        <h2 class="question-text">{{ assessment_question.question }}</h2>
+
+        <form method="POST" action="/next_question">
+            <input type="hidden" name="username" value="{{ username }}">
+    <input type="hidden" name="class" value="{{ year }}">
+    <input type="hidden" name="stream" value="{{ subject }}">
+    <input type="hidden" name="section" value="{{ tool }}">
+    <input type="hidden" name="current_depth" value="{{ current_depth }}">
+    
+    <input type="hidden" name="subdomain_list" value='{{ subdomain_list | tojson }}'>
+            <div class="options">
+                {% for option in assessment_question.options %}
+                <label class="option">
+                    <input type="radio" name="answer" value="{{ loop.index0 }}" required>
+                    <span class="option-text">{{ option }}</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="next-button">Next Question →</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+</body>
+</html>
+
+
+
+
+
+
+    
