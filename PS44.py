@@ -126,15 +126,19 @@ sub5.add_child("Other Medical & Healthcare Disciplines")
 
    
 
-def system_prompt1(subject_node,subdomain_list):
+def system_prompt1(subject_node,subdomain_list,year):
     return f""" You are an expert AI analyst and skill assessment engine. Generate ONLY ONE subdomain
     under {subject_node.name} which is taught in standard academic courses under {subject_node.name}
     and used in modern industry practices.
     DO NOT repeat subdomain which is already present in {subdomain_list}.
+    Target audience: Year {year} college student.
     For instance  if {subject_node.name} is Computer Science & Engineering , the subdomain maybe any programming language such as
     OOPS,Web development,AI/ML,Data Structures and more. 
     if {subject_node.name}  is Mechanical Engineering ,then subdomains may include - CAD/CAM, FEA, CFD, Automobile etc.
     Similar thing will be followed for all the chosen {subject_node.name}.
+    Year Guidance for Subdomains:
+   - Year 1/2: Core foundations (e.g., Basic OOP, Data Types, Arrays, Elementary Algorithms, Basic SQL).
+-   Year 3/4: Applied/Advanced topics (e.g., System Design, Cloud Architecture, ML Deployment, Microservices).
     STRICT REQUIREMENT: Output must be a valid JSON object matching this schema:
    {{
   "subdomain": "Name of Subdomain"
@@ -142,15 +146,15 @@ def system_prompt1(subject_node,subdomain_list):
     
     """
 
-def fetch_client1(subject_node,subdomain_list):
-     client=Groq(api_key="GROQ_API_KEY") #Replace this with your actual API key here     
+def fetch_client1(subject_node,subdomain_list,year):
+     client=Groq(api_key="YOUR_API_KEY") #Replace this with your actual API key here     
      user_prompt=f"Generate one subdomain for {subject_node.name}."
      response=client.chat.completions.create(
         model="openai/gpt-oss-120b",
         messages=[
             {
                 "role":"system",
-                "content":system_prompt1(subject_node,subdomain_list),
+                "content":system_prompt1(subject_node,subdomain_list,year),
             },
             {
                 "role":"user",
@@ -167,13 +171,21 @@ def system_prompt2(current_depth,subject_node,subdomain_list,tool,year):
     topic=subdomain_list[current_depth]
     return f"""
     You are an expert AI skill assessment engine for 'Portal for Academia- Industry collaboration'.
+    PROBLEM STATEMENT:
+    A significant gap exists between the skills acquired in academic institutions and the competencies expected by industries. Students often struggle to identify the skills required for their desired career paths, while industries face challenges in finding candidates with the right skill sets. Similarly, academicians have limited visibility into industry internship opportunities that could help them gain practical exposure and align teaching with current industry practices. There is a need for a unified platform that connects students, industries, and academicians, enabling seamless collaboration and skill development.
+    
     Generate a question based on {topic} to assess the skills of the user in following topic in STRICT JSON format.
+    Target audience: Year {year} college student.
     INSTRUCTIONS:
        1. If the user answered "No Idea" or "skip",DO NOT ask deeper questions on that tool. Ask questions from a completely different sub-topic under {subject_node.name}.
        2.There will be two types of questions-
        a.SKILL_PICKER: To ask about awareness and skills about a specific subdomain under {subject_node.name} for in general questions. 
        b.CONCEPT:One concept based question from {topic} ,relevant to {tool} to evaluate if the user really has some knowledge about it. It must involve questions that bridge the academics-industry gap and fit current requirements.
-       3. The difficulty level of questions should be based on {year}. Ask extremely basic level questions for 1st year, basic to intermediate level questions for 2nd year, Intern level questions for 3rd year, Production or Industry level questions for 4th year and above.
+       3. The difficulty level of questions should be based on {year}. 
+       a. Ask extremely basic level questions for Year==1, 
+       b. Basic to intermediate level questions for Year==2, 
+       c. Intern level questions for Year==3, 
+       d. Production or Industry level questions for Year==4 and above.
        JSON Schema:
        {{
          "question_type": "CONCEPT",
@@ -187,7 +199,7 @@ def system_prompt2(current_depth,subject_node,subdomain_list,tool,year):
     """
 
 def fetch_client2(current_depth,subject_node,subdomain_list,tool,year):
-     client=Groq(api_key="GROQ_API_KEY") #Replace your actual Groq API key here     
+     client=Groq(api_key="YOUR_API_KEY") #Replace your actual Groq API key here     
      
      user_prompt2=f"Generate one question for assessment."
      response=client.chat.completions.create(
@@ -228,7 +240,7 @@ def register():
     subject_node=TreeNode(name=subject,node_type="Specialization")
     
     subdomain_list=[]
-    raw_subdomain=fetch_client1(subject_node, subdomain_list)
+    raw_subdomain=fetch_client1(subject_node, subdomain_list,year)
     subdomain_data=json.loads(raw_subdomain) if isinstance(raw_subdomain, str) else raw_subdomain
     subdomain=subdomain_data.get("subdomain", raw_subdomain)
 
@@ -252,27 +264,30 @@ def register():
         target_subdomain=subdomain,
         subdomain_list=subdomain_list,
         assessment_question=question_data,
+        subject=subject,
         current_depth=current_depth)
-
 @app.route('/next_question',methods=['POST'])
 def next_question():
     data=request.form
-    
-    current_depth=data.get('current_depth',0)+1
-    subdomain_list=data.get('subdomain_list',[])
+    current_depth=int(data.get('current_depth',0))+1
+    max_depth=12
+    raw_subdomains=data.get('subdomain_list','[]')
+    subdomain_list=json.loads(raw_subdomains) if isinstance(raw_subdomains,str) else raw_subdomains
     username=data.get('username')
     year=data.get('class')
     domain=data.get('domain')
     subject=data.get('stream')
     tool=data.get('section')
-
+    message=[]
+    if current_depth>=max_depth:
+        message="<h1>Assessment Complete!</h1><p>Great job, {username}!</p>"
+        return render_template('assess.html',message=message)
     subject_node=TreeNode(name=subject,node_type="Specialization")
-    raw_subdomain=fetch_client1(subject_node, subdomain_list)
-    subdomain_data=json.loads(raw_subdomain) if isinstance(raw_subdomain, str) else raw_subdomain
-    subdomain=subdomain_data.get("subdomain", raw_subdomain)
+    raw_subdomain=fetch_client1(subject_node,subdomain_list,year)
+    subdomain_data=json.loads(raw_subdomain) if isinstance(raw_subdomain,str) else raw_subdomain
+    subdomain=subdomain_data.get("subdomain",raw_subdomain)
     subdomain_list.append(subdomain)
     subject_node.add_child(TreeNode(name=subdomain,node_type="Subdomain"))
-
     question_raw=fetch_client2(
         current_depth=current_depth,
         subject_node=subject_node,
@@ -280,23 +295,17 @@ def next_question():
         tool=tool,
         year=year
     )
-
     question_data=json.loads(question_raw) if isinstance(question_raw,str) else question_raw
-
     return render_template('assess.html',
-    academic_tree=subject_node.to_dict(),
-    target_subdomain=subdomain,
-    subdomain_list=subdomain_list,
-    assessment_question=question_data,
-    current_depth=current_depth)
+        academic_tree=subject_node.to_dict(),
+        target_subdomain=subdomain,
+        username=username,
+        year=year,
+        subject=subject,
+        subdomain_list=subdomain_list,
+        assessment_question=question_data,
+        current_depth=current_depth,
+        )
 
-if __name__=='__main__':
-    app.run(debug=True,port=5000)
-
-
-
-
-
-    
-    
-
+if __name__=="__main__":
+    app.run(debug=True)
