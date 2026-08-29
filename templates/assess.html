@@ -13,9 +13,11 @@
     <h1> Academia-Industry Portal </h1>
     <p class="ehc"> Register Portal For College Students </p>
   </header>
-   
-  <input type="hidden" name="current_depth" value="{{ current_depth }}">
-<input type="hidden" name="subdomain_list" value="{{ subdomain_list }}">
+    {% if message %}
+                <span> {{message}}
+                </span>
+    {% endif %}
+  
 {% if assessment_question is defined %}
 <div class="question-container">
     <div class="question-header">
@@ -29,6 +31,7 @@
         <h2 class="question-text">{{ assessment_question.question }}</h2>
 
         <form method="POST" action="/next_question">
+           
             <input type="hidden" name="username" value="{{ username }}">
     <input type="hidden" name="class" value="{{ year }}">
     <input type="hidden" name="stream" value="{{ subject }}">
@@ -43,7 +46,9 @@
                     <span class="option-text">{{ option }}</span>
                 </label>
                 {% endfor %}
+                
             </div>
+           
 
             <button type="submit" class="next-button">Next Question →</button>
         </form>
