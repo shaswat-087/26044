@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Register</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static',filename='style.css')}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <header>
+    <h1>Academia-Industry Portal</h1>
+    <p class="ehc">Register Portal For College Students</p>
+  </header>
+  <form method="POST" action="/register" enctype="multipart/form-data">
+    <div class="details">
+      <h2>Enter Details</h2>
+      <label for="username"><b>Full Name</b></label>
+      <input type="text" id="username" name="username" placeholder="Enter Full Name" required>
+      
+      <div class="class">
+        <span><b>Year</b></span> 
+        <select name="class" required>
+          <option value="" disabled selected hidden>Select Year</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <span><b>Section</b></span>
+        <select name="section" required>
+          <option value="" disabled selected hidden>Select Your preferred tool/programming language</option>
+          <option>Python</option>
+          <option>C++</option>
+          <option>Java</option>
+          <option>JavaScript</option>
+          <option>MATLAB</option>
+          <option>CAD / CAM</option>
+          <option>Arduino</option>
+          <option>ANSYS</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="type" id="tree-container" data-tree='{{ academic_tree | tojson | safe }}'>
+        <span><b>Major Category</b></span>
+        <!-- FIXED: changed onchange to updateSubcategories() -->
+        <select id="major-category" name="domain" onchange="updateSubcategories()" required>
+          <option value="" disabled selected hidden>Select Major Category</option>
+          {% if academic_tree and academic_tree.children %}
+            {% for category in academic_tree.children %}
+              <option value="{{ loop.index0 }}">{{ category.name }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+
+        <span><b>Specific Discipline</b></span>
+        <select id="stream" name="stream" onchange="updateTopics()" required>
+          <option value="" disabled selected hidden>Select Specific Discipline First</option>
+        </select>
+
+        <span><b>Preferred Topic</b></span>
+        <select id="topic" name="topic" required>
+          <option value="" disabled selected hidden>Select Topic</option>
+        </select>
+      </div>
+
+      <input class="calculate" type="submit" value="Submit">
+    </div>
+  </form>
+
+  <div class="footer">
+    <p>© 2026 Team Vision Nexus</p>
+  </div>
+
+<script>
+  const container=document.getElementById('tree-container');
+  const treeData=JSON.parse(container.getAttribute('data-tree')||'{}');
+
+  function updateSubcategories(){
+    const majorSelect=document.getElementById('major-category');
+    const streamSelect=document.getElementById('stream');
+    const topicSelect=document.getElementById('topic');
+    const majorIdx=majorSelect.value;
+
+    streamSelect.innerHTML='<option value="" disabled selected hidden>Select Specific Discipline</option>';
+    topicSelect.innerHTML='<option value="" disabled selected hidden>Select Topic</option>';
+
+    if(majorIdx!==""&&treeData.children&&treeData.children[majorIdx]){
+      const disciplines=treeData.children[majorIdx].children||[];
+      disciplines.forEach((child,idx)=>{
+        const option=document.createElement('option');
+        const childName=typeof child==='object'?child.name:child;
+        option.value=childName;
+        option.setAttribute('data-idx',idx);
+        option.textContent=childName;
+        streamSelect.appendChild(option);
+      });
+    }
+  }
+
+  function updateTopics(){
+    const majorSelect=document.getElementById('major-category');
+    const streamSelect=document.getElementById('stream');
+    const topicSelect=document.getElementById('topic');
+
+    const majorIdx=majorSelect.value;
+    const selectedOption=streamSelect.options[streamSelect.selectedIndex];
+    const streamIdx=selectedOption?selectedOption.getAttribute('data-idx'):"";
+
+    topicSelect.innerHTML='<option value="" disabled selected hidden>Select Preferred Topic</option>';
+
+    if(majorIdx!==""&&streamIdx!==""&&streamIdx!==null){
+      const selectedDiscipline=treeData.children[majorIdx]?.children?.[streamIdx];
+      const topics=(selectedDiscipline&&typeof selectedDiscipline==='object'&&selectedDiscipline.children)?selectedDiscipline.children:[];
+
+      if(topics.length>0){
+        topics.forEach(top=>{
+          const option=document.createElement('option');
+          const topicName=typeof top==='object'?top.name:top;
+          option.value=topicName;
+          option.textContent=topicName;
+          topicSelect.appendChild(option);
+        });
+      }else{
+        // Fallback so topic selection succeeds even if discipline has no child nodes
+        const option=document.createElement('option');
+        option.value="Core Fundamentals";
+        option.textContent="Core Fundamentals";
+        topicSelect.appendChild(option);
+      }
+    }
+  }
+</script>
+</body>
+</html>
