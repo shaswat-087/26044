@@ -143,7 +143,7 @@ def system_prompt1(subject_node,subdomain_list):
     """
 
 def fetch_client1(subject_node,subdomain_list):
-     client=Groq(api_key=os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE"))     
+     client=Groq(api_key="GROQ_API_KEY") #Replace this with your actual API key here     
      user_prompt=f"Generate one subdomain for {subject_node.name}."
      response=client.chat.completions.create(
         model="openai/gpt-oss-120b",
@@ -187,7 +187,7 @@ def system_prompt2(current_depth,subject_node,subdomain_list,tool,year):
     """
 
 def fetch_client2(current_depth,subject_node,subdomain_list,tool,year):
-     client=Groq(api_key=os.environ.get("GROQ_API_KEY", "YOUR_GROQ_API_KEY_HERE"))     
+     client=Groq(api_key="GROQ_API_KEY") #Replace your actual Groq API key here     
      
      user_prompt2=f"Generate one question for assessment."
      response=client.chat.completions.create(
