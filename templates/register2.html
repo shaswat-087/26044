@@ -56,22 +56,18 @@
             {% endfor %}
           {% endif %}
         </select>
-
+        <div class="section">
         <span><b>Specific Discipline</b></span>
         <select id="stream" name="stream" onchange="updateTopics()" required>
           <option value="" disabled selected hidden>Select Specific Discipline First</option>
         </select>
 
-        <span><b>Preferred Topic</b></span>
-        <select id="topic" name="topic" required>
-          <option value="" disabled selected hidden>Select Topic</option>
-        </select>
-      </div>
-
+        </div>
+        
       <input class="calculate" type="submit" value="Submit">
     </div>
   </form>
-
+</div>
   <div class="footer">
     <p>© 2026 Team Vision Nexus</p>
   </div>
@@ -79,16 +75,11 @@
 <script>
   const container=document.getElementById('tree-container');
   const treeData=JSON.parse(container.getAttribute('data-tree')||'{}');
-
   function updateSubcategories(){
     const majorSelect=document.getElementById('major-category');
     const streamSelect=document.getElementById('stream');
-    const topicSelect=document.getElementById('topic');
     const majorIdx=majorSelect.value;
-
     streamSelect.innerHTML='<option value="" disabled selected hidden>Select Specific Discipline</option>';
-    topicSelect.innerHTML='<option value="" disabled selected hidden>Select Topic</option>';
-
     if(majorIdx!==""&&treeData.children&&treeData.children[majorIdx]){
       const disciplines=treeData.children[majorIdx].children||[];
       disciplines.forEach((child,idx)=>{
@@ -103,36 +94,8 @@
   }
 
   function updateTopics(){
-    const majorSelect=document.getElementById('major-category');
     const streamSelect=document.getElementById('stream');
-    const topicSelect=document.getElementById('topic');
-
-    const majorIdx=majorSelect.value;
-    const selectedOption=streamSelect.options[streamSelect.selectedIndex];
-    const streamIdx=selectedOption?selectedOption.getAttribute('data-idx'):"";
-
-    topicSelect.innerHTML='<option value="" disabled selected hidden>Select Preferred Topic</option>';
-
-    if(majorIdx!==""&&streamIdx!==""&&streamIdx!==null){
-      const selectedDiscipline=treeData.children[majorIdx]?.children?.[streamIdx];
-      const topics=(selectedDiscipline&&typeof selectedDiscipline==='object'&&selectedDiscipline.children)?selectedDiscipline.children:[];
-
-      if(topics.length>0){
-        topics.forEach(top=>{
-          const option=document.createElement('option');
-          const topicName=typeof top==='object'?top.name:top;
-          option.value=topicName;
-          option.textContent=topicName;
-          topicSelect.appendChild(option);
-        });
-      }else{
-        // Fallback so topic selection succeeds even if discipline has no child nodes
-        const option=document.createElement('option');
-        option.value="Core Fundamentals";
-        option.textContent="Core Fundamentals";
-        topicSelect.appendChild(option);
-      }
-    }
+    if(!streamSelect||!streamSelect.value)return;
   }
 </script>
 </body>
