@@ -259,7 +259,7 @@ def register():
     question_data=json.loads(question_raw) if isinstance(question_raw,str) else question_raw
 
     return render_template(
-        'assess.html',
+        'register.html',
         academic_tree=subject_node.to_dict(),
         target_subdomain=subdomain,
         subdomain_list=subdomain_list,
@@ -281,7 +281,7 @@ def next_question():
     message=[]
     if current_depth>=max_depth:
         message="<h1>Assessment Complete!</h1><p>Great job, {username}!</p>"
-        return render_template('assess.html',message=message)
+        return render_template('register.html',message=message)
     subject_node=TreeNode(name=subject,node_type="Specialization")
     raw_subdomain=fetch_client1(subject_node,subdomain_list,year)
     subdomain_data=json.loads(raw_subdomain) if isinstance(raw_subdomain,str) else raw_subdomain
@@ -296,7 +296,7 @@ def next_question():
         year=year
     )
     question_data=json.loads(question_raw) if isinstance(question_raw,str) else question_raw
-    return render_template('assess.html',
+    return render_template('register.html',
         academic_tree=subject_node.to_dict(),
         target_subdomain=subdomain,
         username=username,
